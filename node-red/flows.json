@@ -1,0 +1,158 @@
+[
+    {
+        "id": "1dea392bb9cc936c",
+        "type": "tab",
+        "label": "LaLiga Dashboard",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "kafka_in",
+        "type": "kafkajs-consumer",
+        "z": "1dea392bb9cc936c",
+        "name": "laliga-matches Consumer",
+        "client": "kafka_broker_config",
+        "topic": "laliga-matches",
+        "x": 210,
+        "y": 160,
+        "wires": [
+            [
+                "json_parser"
+            ]
+        ]
+    },
+    {
+        "id": "json_parser",
+        "type": "json",
+        "z": "1dea392bb9cc936c",
+        "name": "Parse JSON",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 430,
+        "y": 160,
+        "wires": [
+            [
+                "debug_node",
+                "format_match_function"
+            ]
+        ]
+    },
+    {
+        "id": "debug_node",
+        "type": "debug",
+        "z": "1dea392bb9cc936c",
+        "name": "Console",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 630,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "format_match_function",
+        "type": "function",
+        "z": "1dea392bb9cc936c",
+        "name": "Format",
+        "func": "var count = context.get('matchCount') || 0;\ncount += 1;\ncontext.set('matchCount', count);\n\nvar home = (msg.payload.homeTeam && msg.payload.homeTeam.shortName) ? msg.payload.homeTeam.shortName : 'Home';\nvar away = (msg.payload.awayTeam && msg.payload.awayTeam.shortName) ? msg.payload.awayTeam.shortName : 'Away';\nvar matchday = msg.payload.matchday || '?';\n\nmsg.payload = \"[Match \" + count + \"] Matchday \" + matchday + \" | \" + home + \" vs \" + away;\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 200,
+        "wires": [
+            [
+                "ui_text_node"
+            ]
+        ]
+    },
+    {
+        "id": "ui_text_node",
+        "type": "ui-text",
+        "z": "1dea392bb9cc936c",
+        "group": "ui_group_id",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "Latest Match Display",
+        "label": "",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "x": 880,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "kafka_broker_config",
+        "type": "kafkajs-client",
+        "name": "Kafka Docker",
+        "brokers": "kafka:9092",
+        "clientid": "nodered-ui"
+    },
+    {
+        "id": "ui_group_id",
+        "type": "ui-group",
+        "name": "Live Data Feed",
+        "page": "ui_page_id",
+        "width": "6",
+        "height": "1",
+        "order": 1,
+        "showTitle": true,
+        "className": ""
+    },
+    {
+        "id": "ui_page_id",
+        "type": "ui-page",
+        "name": "Football Analytics",
+        "ui": "ui_base_id",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "ui_theme_id",
+        "order": 1,
+        "className": ""
+    },
+    {
+        "id": "ui_base_id",
+        "type": "ui-base",
+        "name": "LaLiga Dashboard",
+        "path": "/dashboard",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control",
+            "ui-event"
+        ]
+    },
+    {
+        "id": "ui_theme_id",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#1f2937",
+            "bgPage": "#f3f4f6",
+            "groupBg": "#ffffff",
+            "groupOutline": "#e5e7eb"
+        }
+    },
+    {
+        "id": "2266e6aea974e215",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-kafkajs": "0.0.7",
+            "@flowfuse/node-red-dashboard": "1.37.0"
+        }
+    }
+]

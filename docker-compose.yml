@@ -1,0 +1,8 @@
+services:
+  nodered:
+    image: nodered/node-red:latest
+    container_name: nodered-football
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./node-red-data:/data
