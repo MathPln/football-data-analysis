@@ -3,14 +3,13 @@ import time
 import json
 import requests
 from kafka import KafkaProducer
-from kafka.errors import NoBrokersAvailable
 from dotenv import load_dotenv
 
 # Configuration
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 BROKER = os.getenv("KAFKA_BROKER", "localhost:29092")
-MATCHES_TOPIC = os.getenv("KAFKA_TOPIC", "laliga-matches")
+TEAM_MATCHES_TOPIC = os.getenv("KAFKA_TEAM_MATCHES_TOPIC", "laliga-team-matches")
 SCORERS_TOPIC = os.getenv("KAFKA_SCORERS_TOPIC", "laliga-scorers")
 
 if not API_KEY or API_KEY == "xxx":
@@ -33,8 +32,8 @@ for attempt in range(1, 16):
             key_serializer=lambda k: str(k).encode('utf-8')
         )
         break
-    except NoBrokersAvailable:
-        print(f"Kafka not ready ({attempt}/15), retrying in 3s...")
+    except Exception as e:
+        print(f"Kafka not ready ({attempt}/15): {e}. Retrying in 3s...")
         time.sleep(3)
 
 if producer is None:
@@ -48,7 +47,7 @@ last_scorers = {}
 try:
     while True:
         try:
-            # 1. Fetch & send matches
+            # 1. Fetch & send matches (2 team-keyed events per match for parallel consumers)
             res_matches = requests.get(MATCHES_URL, headers=HEADERS, timeout=15)
             res_matches.raise_for_status()
             matches = res_matches.json().get('matches', [])
@@ -58,7 +57,32 @@ try:
                 match_id = match.get('id', 'unknown')
                 raw = json.dumps(match, sort_keys=True)
                 if last_matches.get(match_id) != raw:
-                    producer.send(MATCHES_TOPIC, key=match_id, value=match)
+                    home = match.get('homeTeam', {})
+                    away = match.get('awayTeam', {})
+                    ft = match.get('score', {}).get('fullTime', {})
+                    hg, ag = ft.get('home'), ft.get('away')
+
+                    for team, opp, venue, gf, ga in [
+                        (home, away, 'Home', hg, ag),
+                        (away, home, 'Away', ag, hg)
+                    ]:
+                        team_id = team.get('id')
+                        if team_id is not None:
+                            event = {
+                                'matchId': match_id,
+                                'matchday': match.get('matchday', 0),
+                                'utcDate': match.get('utcDate', ''),
+                                'status': match.get('status', ''),
+                                'teamId': team_id,
+                                'teamName': team.get('shortName') or team.get('name', 'Unknown'),
+                                'tla': team.get('tla', ''),
+                                'opponent': opp.get('shortName') or opp.get('name', 'Unknown'),
+                                'venue': venue,
+                                'goalsFor': gf,
+                                'goalsAgainst': ga
+                            }
+                            producer.send(TEAM_MATCHES_TOPIC, key=team_id, value=event)
+
                     last_matches[match_id] = raw
                     sent_matches += 1
 
@@ -79,7 +103,7 @@ try:
             # 3. Flush all messages
             if sent_matches or sent_scorers:
                 producer.flush()
-            print(f"Sent {sent_matches}/{len(matches)} matches to '{MATCHES_TOPIC}' and {sent_scorers}/{len(scorers)} players to '{SCORERS_TOPIC}'.")
+            print(f"Sent {sent_matches}/{len(matches)} matches to '{TEAM_MATCHES_TOPIC}' and {sent_scorers}/{len(scorers)} players to '{SCORERS_TOPIC}'.")
 
         except Exception as e:
             print(f"Error occurred: {e}")
