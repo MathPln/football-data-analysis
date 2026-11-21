@@ -8,17 +8,17 @@ from dotenv import load_dotenv
 # Configuration
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
-BROKER = os.getenv("KAFKA_BROKER")
-TOPIC = os.getenv("KAFKA_TOPIC")
+BROKER = os.getenv("KAFKA_BROKER", "localhost:29092")
+MATCHES_TOPIC = os.getenv("KAFKA_TOPIC", "laliga-matches")
+SCORERS_TOPIC = os.getenv("KAFKA_SCORERS_TOPIC", "laliga-scorers")
 
 if not API_KEY or API_KEY == "xxx":
     raise ValueError("API_KEY is not set. Please set it in the .env file.")
 if not BROKER or BROKER == "xxx":
     raise ValueError("KAFKA_BROKER is not set. Please set it in the .env file.")
-if not TOPIC or TOPIC == "xxx":
-    raise ValueError("KAFKA_TOPIC is not set. Please set it in the .env file.")
 
-API_URL = "https://api.football-data.org/v4/competitions/PD/matches"
+MATCHES_URL = "https://api.football-data.org/v4/competitions/PD/matches"
+SCORERS_URL = "https://api.football-data.org/v4/competitions/PD/scorers?limit=50"
 HEADERS = {'X-Auth-Token': API_KEY}
 
 # Initialize Kafka Producer
@@ -28,28 +28,39 @@ producer = KafkaProducer(
     key_serializer=lambda k: str(k).encode('utf-8')
 )
 
-print("Starting Football API Producer...")
+print(f"Starting Football API Producer on {BROKER}...")
 
-while True:
-    try:
-        # 1. Fetch data from API
-        response = requests.get(API_URL, headers=HEADERS)
-        response.raise_for_status()
-        matches = response.json().get('matches', [])
-        
-        print(f"Fetched {len(matches)} matches.")
+try:
+    while True:
+        try:
+            # 1. Fetch & send matches
+            res_matches = requests.get(MATCHES_URL, headers=HEADERS, timeout=15)
+            res_matches.raise_for_status()
+            matches = res_matches.json().get('matches', [])
 
-        # 2. Send each match as a separate event to Kafka
-        for match in matches:
-            match_id = match.get('id', 'unknown')
-            producer.send(TOPIC, key=match_id, value=match)
-        
-        # 3. Ensure all messages are sent
-        producer.flush()
-        print("Data successfully sent to Kafka.")
+            for match in matches:
+                match_id = match.get('id', 'unknown')
+                producer.send(MATCHES_TOPIC, key=match_id, value=match)
 
-    except Exception as e:
-        print(f"Error occurred: {e}")
+            # 2. Fetch & send top scorers (for Player Stats page)
+            res_scorers = requests.get(SCORERS_URL, headers=HEADERS, timeout=15)
+            res_scorers.raise_for_status()
+            scorers = res_scorers.json().get('scorers', [])
 
-    # 4. Respect API rate limit (max 10 req/min)
-    time.sleep(7)
+            for scorer in scorers:
+                player_id = scorer.get('player', {}).get('id', 'unknown')
+                producer.send(SCORERS_TOPIC, key=player_id, value=scorer)
+
+            # 3. Flush all messages
+            producer.flush()
+            print(f"Sent {len(matches)} matches to '{MATCHES_TOPIC}' and {len(scorers)} players to '{SCORERS_TOPIC}'.")
+
+        except Exception as e:
+            print(f"Error occurred: {e}")
+
+        # 4. Wait 60s between polls to stay well under API rate limits
+        time.sleep(60)
+
+except KeyboardInterrupt:
+    print("\nStopping Producer.")
+    producer.close()
