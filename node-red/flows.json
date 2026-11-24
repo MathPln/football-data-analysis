@@ -7,182 +7,6 @@
         "info": ""
     },
     {
-        "id": "kafka_broker_config",
-        "type": "kafkajs-client",
-        "name": "Kafka Docker",
-        "brokers": "kafka:9092",
-        "clientid": "nodered-ui",
-        "connectiontimeout": "30000",
-        "requesttimeout": "30000",
-        "advancedretry": true,
-        "maxretrytime": "30000",
-        "initialretrytime": "300",
-        "factor": "0.2",
-        "multiplier": "1",
-        "retries": "5",
-        "tlsselfsign": false,
-        "tlscacert": "",
-        "tlsclientcert": "",
-        "tlsprivatekey": "",
-        "tlspassphrase": "",
-        "saslssl": false
-    },
-    {
-        "id": "ui_base_id",
-        "type": "ui-base",
-        "name": "LaLiga Dashboard",
-        "path": "/dashboard",
-        "includeClientData": true,
-        "acceptsClientConfig": [
-            "ui-notification",
-            "ui-control",
-            "ui-event"
-        ]
-    },
-    {
-        "id": "ui_theme_id",
-        "type": "ui-theme",
-        "name": "Default Theme",
-        "colors": {
-            "surface": "#ffffff",
-            "primary": "#1f2937",
-            "bgPage": "#f3f4f6",
-            "groupBg": "#ffffff",
-            "groupOutline": "#e5e7eb"
-        }
-    },
-    {
-        "id": "fb4669e2a05068cd",
-        "type": "ui-page",
-        "name": "Top Scorers",
-        "ui": "ui_base_id",
-        "path": "/page2",
-        "icon": "home",
-        "layout": "grid",
-        "theme": "ui_theme_id",
-        "breakpoints": [
-            {
-                "name": "Default",
-                "px": "0",
-                "cols": "3"
-            },
-            {
-                "name": "Tablet",
-                "px": "576",
-                "cols": "6"
-            },
-            {
-                "name": "Small Desktop",
-                "px": "768",
-                "cols": "9"
-            },
-            {
-                "name": "Desktop",
-                "px": "1024",
-                "cols": "12"
-            }
-        ],
-        "tabs": [],
-        "order": 2,
-        "className": "",
-        "visible": "true",
-        "disabled": "false"
-    },
-    {
-        "id": "f740b134e1a2e2f7",
-        "type": "ui-group",
-        "name": "Scorers Ranking",
-        "page": "fb4669e2a05068cd",
-        "width": 6,
-        "height": 1,
-        "order": 1,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default",
-        "keepLoaded": false,
-        "tab": ""
-    },
-    {
-        "id": "ui_page_id",
-        "type": "ui-page",
-        "name": "Football Analytics",
-        "ui": "ui_base_id",
-        "path": "/page1",
-        "icon": "home",
-        "layout": "grid",
-        "theme": "ui_theme_id",
-        "order": 1,
-        "className": ""
-    },
-    {
-        "id": "ui_group_id",
-        "type": "ui-group",
-        "name": "Live Data Feed",
-        "page": "ui_page_id",
-        "width": "6",
-        "height": "1",
-        "order": 1,
-        "showTitle": true,
-        "className": "",
-        "visible": true,
-        "disabled": false
-    },
-    {
-        "id": "1324f03521afc73b",
-        "type": "ui-page",
-        "name": "Team Analysis",
-        "ui": "ui_base_id",
-        "path": "/page3",
-        "icon": "home",
-        "layout": "grid",
-        "theme": "ui_theme_id",
-        "breakpoints": [
-            {
-                "name": "Default",
-                "px": "0",
-                "cols": "3"
-            },
-            {
-                "name": "Tablet",
-                "px": "576",
-                "cols": "6"
-            },
-            {
-                "name": "Small Desktop",
-                "px": "768",
-                "cols": "9"
-            },
-            {
-                "name": "Desktop",
-                "px": "1024",
-                "cols": "12"
-            }
-        ],
-        "tabs": [],
-        "order": 3,
-        "className": "",
-        "visible": "true",
-        "disabled": "false"
-    },
-    {
-        "id": "df03f02293da5ad8",
-        "type": "ui-group",
-        "name": "Team Statistics",
-        "page": "1324f03521afc73b",
-        "width": 6,
-        "height": 1,
-        "order": 1,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default",
-        "keepLoaded": false,
-        "tab": ""
-    },
-    {
         "id": "json_parser",
         "type": "json",
         "z": "1dea392bb9cc936c",
@@ -236,7 +60,7 @@
         "maxbytes": "10485760",
         "maxwaittimeinms": "5000",
         "frombeginning": true,
-        "clearoffsets": false,
+        "clearoffsets": true,
         "allowautotopiccreation": false,
         "x": 210,
         "y": 240,
@@ -251,8 +75,8 @@
         "type": "function",
         "z": "1dea392bb9cc936c",
         "name": "Build League Table",
-        "func": "\n// 1. Parse the Kafka message\nvar kafkaMessage = typeof msg.payload === \"string\"\n    ? JSON.parse(msg.payload)\n    : msg.payload;\n\n// 2. Extract team statistics\nvar stats = typeof kafkaMessage.value === \"string\"\n    ? JSON.parse(kafkaMessage.value)\n    : kafkaMessage.value;\n\n// 3. Retrieve stored teams\nvar teams = flow.get(\"teams\") || {};\n\n// 4. Update this team's statistics\nteams[stats.teamId] = stats;\n\n// 5. Save the updated state\nflow.set(\"teams\", teams);\n\n// 6. Build league table\nvar table = Object.values(teams);\n\n// 7. Sort by points, goal difference and goals scored\ntable.sort((a, b) =>\n    (b.points - a.points) ||\n    (b.gd - a.gd) ||\n    (b.gf - a.gf)\n);\n\n\n // 8. Build a compact league table\n msg.payload = table.map((team, index) => ({\n     Pos: index + 1,\n     Equipo: team.name,\n     PJ: team.played,\n     G: team.won,\n     E: team.draw,\n     P: team.lost,\n     DG: team.gd,\n     Pts: team.points\n }));\n\n return msg;\n",
-        "outputs": 1,
+        "func": "// 1. Parse the Kafka message\nvar kafkaMessage = typeof msg.payload === \"string\"\n    ? JSON.parse(msg.payload)\n    : msg.payload;\n\n// 2. Extract team statistics\nvar stats = typeof kafkaMessage.value === \"string\"\n    ? JSON.parse(kafkaMessage.value)\n    : kafkaMessage.value;\n\n// 3. Retrieve stored teams\nvar teams = flow.get(\"teams\") || {};\n\n// 4. Update this team's statistics\nteams[stats.teamId] = stats;\n\n// 5. Save the updated state\nflow.set(\"teams\", teams);\n\n// 6. Build league table\nvar table = Object.values(teams);\n\n// 7. Sort by points, goal difference and goals scored\ntable.sort((a, b) =>\n    (b.points - a.points) ||\n    (b.gd - a.gd) ||\n    (b.gf - a.gf)\n);\n\n// 8. Output 1: Compact league table\nvar tableMsg = {\n    payload: table.map((team, index) => ({\n        Pos: index + 1,\n        Equipo: team.name,\n        PJ: team.played,\n        G: team.won,\n        E: team.draw,\n        P: team.lost,\n        DG: team.gd,\n        Pts: team.points,\n        Form: team.last5 || \"-\",\n        Worker: team.processedBy || \"-\"\n    }))\n};\n\n// 9. Output 2: Top 8 attacks (goals scored) with team colors\nvar teamColors = {\n    \"FCB\": \"#004D98\", \n    \"RMA\": \"#CBD5E1\", \n    \"ATL\": \"#CB3524\", \n    \"BET\": \"#0BB363\", \n    \"RSO\": \"#0067B1\",\n    \"VIL\": \"#FACC15\",\n    \"ATH\": \"#EE2523\",\n    \"SEV\": \"#D91A2A\",\n    \"RAY\": \"#E11D48\",\n    \"CEL\": \"#7DD3FC\", \n    \"VAL\": \"#F97316\", \n    \"OSA\": \"#B91C1C\", \n    \"GET\": \"#2563EB\", \n    \"ESP\": \"#3B82F6\", \n    \"ALA\": \"#1D4ED8\", \n    \"LEV\": \"#7C2D12\", \n    \"ELC\": \"#16A34A\", \n    \"MAL\": \"#0284C7\", \n    \"DEP\": \"#1E40AF\",\n    \"SAN\": \"#15803D\"  \n};\n\nvar topAttacks = table\n    .slice()\n    .sort((a, b) => b.gf - a.gf)\n    .slice(0, 8)\n    .map(team => ({\n        category: team.tla || team.name,\n        value: team.gf\n    }));\n\nvar attacksMsg = {\n    payload: topAttacks,\n    ui_update: {\n        chartOptions: {\n            color: topAttacks.map(item => teamColors[item.category] || \"#64748B\")\n        }\n    }\n};\n\n// 10. Output 3: Season summary line\nvar totalPlayed = table.reduce((sum, t) => sum + t.played, 0);\nvar totalGoals = table.reduce((sum, t) => sum + t.gf, 0);\nvar matchesPlayed = Math.floor(totalPlayed / 2);\nvar avgGoals = matchesPlayed > 0 ? (totalGoals / matchesPlayed).toFixed(2) : \"0.00\";\nvar leader = table[0] ? `${table[0].name} (${table[0].points} pts)` : \"-\";\n\nvar summaryMsg = {\n    payload: `Leader: ${leader}  |  Matches: ${matchesPlayed}  |  Total Goals: ${totalGoals}  |  Avg: ${avgGoals} goals/match`\n};\n\nreturn [tableMsg, attacksMsg, summaryMsg];\n",
+        "outputs": 3,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -264,6 +88,12 @@
             [
                 "1783641820f6b635",
                 "72a7515935e9b224"
+            ],
+            [
+                "cht_top_attacks"
+            ],
+            [
+                "bd6dc8ccfc8b118c"
             ]
         ]
     },
@@ -275,9 +105,9 @@
         "name": "LaLiga Standings",
         "label": "LaLiga Classification",
         "order": 1,
-        "width": "12",
-        "height": "20",
-        "maxrows": "0",
+        "width": 8,
+        "height": 11,
+        "maxrows": 0,
         "passthru": false,
         "autocols": false,
         "showSearch": true,
@@ -305,7 +135,7 @@
                 "key": "PJ",
                 "keyType": "key",
                 "type": "text",
-                "width": "50",
+                "width": "45",
                 "align": "center"
             },
             {
@@ -337,7 +167,7 @@
                 "key": "DG",
                 "keyType": "key",
                 "type": "text",
-                "width": "50",
+                "width": "45",
                 "align": "center"
             },
             {
@@ -345,7 +175,23 @@
                 "key": "Pts",
                 "keyType": "key",
                 "type": "text",
-                "width": "50",
+                "width": "45",
+                "align": "center"
+            },
+            {
+                "title": "Form",
+                "key": "Form",
+                "keyType": "key",
+                "type": "text",
+                "width": "85",
+                "align": "center"
+            },
+            {
+                "title": "Worker",
+                "key": "Worker",
+                "keyType": "key",
+                "type": "text",
+                "width": "105",
                 "align": "center"
             }
         ],
@@ -354,7 +200,69 @@
         "action": "replace",
         "className": "",
         "x": 970,
-        "y": 180,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "cht_top_attacks",
+        "type": "ui-chart",
+        "z": "1dea392bb9cc936c",
+        "group": "grp_p1_attacks",
+        "name": "Top 8 Attacks",
+        "label": "Goals Scored",
+        "order": 1,
+        "chartType": "bar",
+        "category": "",
+        "categoryType": "none",
+        "xAxisLabel": "Team",
+        "xAxisProperty": "category",
+        "xAxisPropertyType": "property",
+        "xAxisType": "category",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "Goals",
+        "yAxisProperty": "value",
+        "yAxisPropertyType": "property",
+        "ymin": "0",
+        "ymax": "",
+        "bins": 10,
+        "action": "replace",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": false,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#000000",
+            "#000000",
+            "#000000"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 4,
+        "height": 11,
+        "className": "",
+        "interpolation": "linear",
+        "x": 970,
+        "y": 220,
         "wires": [
             []
         ]
@@ -379,7 +287,7 @@
         "maxbytes": "10485760",
         "maxwaittimeinms": "5000",
         "frombeginning": true,
-        "clearoffsets": false,
+        "clearoffsets": true,
         "allowautotopiccreation": false,
         "x": 210,
         "y": 380,
@@ -410,8 +318,8 @@
         "type": "function",
         "z": "1dea392bb9cc936c",
         "name": "Build Top Scorers",
-        "func": "\n// 1. Parse Kafka message\nvar kafkaMessage = typeof msg.payload === \"string\"\n    ? JSON.parse(msg.payload)\n    : msg.payload;\n\n// 2. Extract scorer data\nvar scorer = typeof kafkaMessage.value === \"string\"\n    ? JSON.parse(kafkaMessage.value)\n    : kafkaMessage.value;\n\n// 3. Retrieve stored players\nvar players = context.get(\"players\") || {};\n\n// 4. Update player statistics\nvar playerId = scorer.player?.id;\n\nif (playerId == null) {\n    return null;\n}\n\nplayers[playerId] = scorer;\ncontext.set(\"players\", players);\n\n// 5. Sort players by goals, then assists\nvar ranking = Object.values(players);\n\nranking.sort((a, b) =>\n    (b.goals - a.goals) ||\n    ((b.assists || 0) - (a.assists || 0))\n);\n\n// 6. Build top scorers table\nmsg.payload = ranking.map((item, index) => ({\n    Pos: index + 1,\n    Player: item.player?.name || \"Unknown\",\n    Team: item.team?.shortName || item.team?.name || \"-\",\n    Goals: item.goals ?? 0,\n    Assists: item.assists ?? 0,\n    Penalties: item.penalties ?? 0\n}));\n\nreturn msg;\n\n",
-        "outputs": 1,
+        "func": "// 1. Parse Kafka message\nvar kafkaMessage = typeof msg.payload === \"string\"\n    ? JSON.parse(msg.payload)\n    : msg.payload;\n\n// 2. Extract scorer data\nvar scorer = typeof kafkaMessage.value === \"string\"\n    ? JSON.parse(kafkaMessage.value)\n    : kafkaMessage.value;\n\n// 3. Retrieve stored players\nvar players = context.get(\"players\") || {};\n\n// 4. Update player statistics\nvar playerId = scorer.player?.id;\n\nif (playerId == null) {\n    return null;\n}\n\nplayers[playerId] = scorer;\ncontext.set(\"players\", players);\n\n// 5. Sort players by goals, then assists\nvar ranking = Object.values(players);\n\nranking.sort((a, b) =>\n    (b.goals - a.goals) ||\n    ((b.assists || 0) - (a.assists || 0))\n);\n\n// 6. Output 1: Top scorers table\nvar tableMsg = {\n    payload: ranking.map((item, index) => ({\n        Pos: index + 1,\n        Player: item.player?.name || \"Unknown\",\n        Team: item.team?.shortName || item.team?.name || \"-\",\n        Goals: item.goals ?? 0,\n        Assists: item.assists ?? 0,\n        Penalties: item.penalties ?? 0\n    }))\n};\n\n// 7. Output 2: Top 10 scorers chart\nvar chartMsg = {\n    payload: ranking.slice(0, 10).map(item => ({\n        category: (item.player?.name || \"Unknown\").split(\" \").slice(-1)[0],\n        value: item.goals ?? 0\n    }))\n};\n\nreturn [tableMsg, chartMsg];\n",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -422,6 +330,9 @@
         "wires": [
             [
                 "a020e4debf0fd426"
+            ],
+            [
+                "cht_top_scorers"
             ]
         ]
     },
@@ -433,8 +344,8 @@
         "name": "LaLiga Top Scorers",
         "label": "",
         "order": 1,
-        "width": 0,
-        "height": 0,
+        "width": 7,
+        "height": 10,
         "maxrows": 0,
         "passthru": false,
         "autocols": true,
@@ -447,7 +358,66 @@
         "action": "replace",
         "className": "",
         "x": 1110,
-        "y": 380,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "cht_top_scorers",
+        "type": "ui-chart",
+        "z": "1dea392bb9cc936c",
+        "group": "grp_p2_chart",
+        "name": "Top 10 Scorers Chart",
+        "label": "Goals",
+        "order": 1,
+        "chartType": "bar",
+        "category": "Goals",
+        "categoryType": "str",
+        "xAxisLabel": "Player",
+        "xAxisProperty": "category",
+        "xAxisPropertyType": "property",
+        "xAxisType": "category",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "Goals",
+        "yAxisProperty": "value",
+        "yAxisPropertyType": "property",
+        "ymin": "0",
+        "ymax": "",
+        "bins": 10,
+        "action": "replace",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": false,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 5,
+        "height": 10,
+        "className": "",
+        "interpolation": "linear",
+        "x": 1120,
+        "y": 420,
         "wires": [
             []
         ]
@@ -461,8 +431,8 @@
         "label": "Select Team",
         "tooltip": "",
         "order": 1,
-        "width": 0,
-        "height": 0,
+        "width": 4,
+        "height": 1,
         "passthru": false,
         "multiple": false,
         "chips": false,
@@ -493,7 +463,7 @@
         "type": "function",
         "z": "1dea392bb9cc936c",
         "name": "Build Team Options",
-        "func": "\nvar teams = msg.payload;\n\n// Sort teams alphabetically\nteams.sort((a, b) => a.Equipo.localeCompare(b.Equipo));\n\n// Create dropdown options\nmsg.ui_update = {\n    options: teams.map(team => ({\n        label: team.Equipo,\n        value: team.Equipo\n    }))\n};\n\n// Avoid selecting a team automatically\ndelete msg.payload;\n\nreturn msg;\n\n\n",
+        "func": "var teams = msg.payload;\n\n// Sort teams alphabetically\nteams.sort((a, b) => a.Equipo.localeCompare(b.Equipo));\n\n// Create dropdown options\nmsg.ui_update = {\n    options: teams.map(team => ({\n        label: team.Equipo,\n        value: team.Equipo\n    }))\n};\n\n// Avoid selecting a team automatically\ndelete msg.payload;\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -513,8 +483,8 @@
         "type": "function",
         "z": "1dea392bb9cc936c",
         "name": "Show Team Stats",
-        "func": "\nconst selectedTeam = msg.payload;\n\n// Retrieve shared team statistics\nconst teams = flow.get(\"teams\") || {};\n\n// Find selected team\nconst stats = Object.values(teams).find(\n    team => team.name === selectedTeam\n);\n\nif (!stats) {\n    node.warn(\"Team not found: \" + selectedTeam);\n    return null;\n}\n\n// Output 1: Match Results\nconst resultsMsg = {\n    payload: [\n        { category: \"Wins\", value: stats.won },\n        { category: \"Draws\", value: stats.draw },\n        { category: \"Losses\", value: stats.lost }\n    ]\n};\n\n// Output 2: Goals Comparison\nconst goalsMsg = {\n    payload: [\n        { category: \"Goals For\", value: stats.gf },\n        { category: \"Goals Against\", value: stats.ga }\n    ]\n};\n\nreturn [resultsMsg, goalsMsg];\n\n\n\n\n\n\n\n\n",
-        "outputs": 2,
+        "func": "const selectedTeam = msg.payload;\n\n// Retrieve shared team statistics\nconst teams = flow.get(\"teams\") || {};\n\n// Find selected team\nconst stats = Object.values(teams).find(\n    team => team.name === selectedTeam\n);\n\nif (!stats) {\n    node.warn(\"Team not found: \" + selectedTeam);\n    return null;\n}\n\n// Output 1: Match Results\nconst resultsMsg = {\n    payload: [\n        { category: \"Wins\", value: stats.won },\n        { category: \"Draws\", value: stats.draw },\n        { category: \"Losses\", value: stats.lost }\n    ]\n};\n\n// Output 2: Goals Comparison\nconst goalsMsg = {\n    payload: [\n        { category: \"Goals For\", value: stats.gf },\n        { category: \"Goals Against\", value: stats.ga }\n    ]\n};\n\n// Output 3: Match History (most recent first)\nconst historyMsg = {\n    payload: (stats.history || []).slice().reverse()\n};\n\nreturn [resultsMsg, goalsMsg, historyMsg];\n",
+        "outputs": 3,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -528,6 +498,9 @@
             ],
             [
                 "2759dba1517c417f"
+            ],
+            [
+                "tbl_team_history"
             ]
         ]
     },
@@ -535,13 +508,13 @@
         "id": "c586cedf67b2dabf",
         "type": "ui-chart",
         "z": "1dea392bb9cc936c",
-        "group": "df03f02293da5ad8",
+        "group": "grp_p3_results",
         "name": "Match Results",
-        "label": "chart",
-        "order": 2,
+        "label": "Wins / Draws / Losses",
+        "order": 1,
         "chartType": "bar",
-        "category": "Results",
-        "categoryType": "str",
+        "category": "",
+        "categoryType": "none",
         "xAxisLabel": "Match Result",
         "xAxisProperty": "category",
         "xAxisPropertyType": "property",
@@ -565,9 +538,9 @@
         "removeOlderUnit": "3600",
         "removeOlderPoints": "",
         "colors": [
-            "#0095ff",
+            "#2ca02c",
+            "#8a8a8a",
             "#ff0000",
-            "#ff7f0e",
             "#2ca02c",
             "#a347e1",
             "#d62728",
@@ -584,7 +557,7 @@
         ],
         "gridColorDefault": true,
         "width": 6,
-        "height": 8,
+        "height": 7,
         "className": "",
         "interpolation": "linear",
         "x": 1440,
@@ -597,13 +570,13 @@
         "id": "2759dba1517c417f",
         "type": "ui-chart",
         "z": "1dea392bb9cc936c",
-        "group": "df03f02293da5ad8",
+        "group": "grp_p3_goals",
         "name": "Goals Comparison",
-        "label": "chart",
-        "order": 3,
+        "label": "Goals For vs Against",
+        "order": 1,
         "chartType": "bar",
-        "category": "Goals",
-        "categoryType": "str",
+        "category": "",
+        "categoryType": "none",
         "xAxisLabel": "Goal Type",
         "xAxisProperty": "category",
         "xAxisPropertyType": "property",
@@ -622,12 +595,12 @@
         "stackSeries": false,
         "pointShape": "circle",
         "pointRadius": 4,
-        "showLegend": true,
+        "showLegend": false,
         "removeOlder": 1,
         "removeOlderUnit": "3600",
         "removeOlderPoints": "",
         "colors": [
-            "#0095ff",
+            "#2ca02c",
             "#ff0000",
             "#ff7f0e",
             "#2ca02c",
@@ -646,17 +619,364 @@
         ],
         "gridColorDefault": true,
         "width": 6,
-        "height": 8,
+        "height": 7,
         "className": "",
         "interpolation": "linear",
         "x": 1450,
+        "y": 600,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "tbl_team_history",
+        "type": "ui-table",
+        "z": "1dea392bb9cc936c",
+        "group": "grp_p3_history",
+        "name": "Match History",
+        "label": "Match History",
+        "order": 1,
+        "width": 12,
+        "height": 8,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": true,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 1440,
         "y": 680,
         "wires": [
             []
         ]
     },
     {
-        "id": "9f29b34eb4d14c27",
+        "id": "bd6dc8ccfc8b118c",
+        "type": "ui-text",
+        "z": "1dea392bb9cc936c",
+        "group": "7d2d883102796b11",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "Season Overview",
+        "label": "",
+        "format": "{{msg.payload}}",
+        "layout": "row-center",
+        "style": true,
+        "font": "",
+        "fontSize": "22",
+        "color": "#000000",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 990,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "kafka_broker_config",
+        "type": "kafkajs-client",
+        "name": "Kafka Docker",
+        "brokers": "kafka:9092",
+        "clientid": "nodered-ui",
+        "connectiontimeout": "30000",
+        "requesttimeout": "30000",
+        "advancedretry": true,
+        "maxretrytime": "30000",
+        "initialretrytime": "300",
+        "factor": "0.2",
+        "multiplier": "1",
+        "retries": "5",
+        "tlsselfsign": false,
+        "tlscacert": "",
+        "tlsclientcert": "",
+        "tlsprivatekey": "",
+        "tlspassphrase": "",
+        "saslssl": false
+    },
+    {
+        "id": "ui_group_id",
+        "type": "ui-group",
+        "name": "LaLiga Standings",
+        "page": "ui_page_id",
+        "width": 8,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": true,
+        "disabled": false,
+        "groupType": "default"
+    },
+    {
+        "id": "grp_p1_attacks",
+        "type": "ui-group",
+        "name": "Top Attacks",
+        "page": "ui_page_id",
+        "width": 4,
+        "height": 1,
+        "order": 3,
+        "showTitle": true,
+        "className": "",
+        "visible": true,
+        "disabled": false,
+        "groupType": "default"
+    },
+    {
+        "id": "f740b134e1a2e2f7",
+        "type": "ui-group",
+        "name": "Scorers Ranking",
+        "page": "fb4669e2a05068cd",
+        "width": 7,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default",
+        "keepLoaded": false,
+        "tab": ""
+    },
+    {
+        "id": "grp_p2_chart",
+        "type": "ui-group",
+        "name": "Top 10 Scorers",
+        "page": "fb4669e2a05068cd",
+        "width": 5,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default",
+        "keepLoaded": false,
+        "tab": ""
+    },
+    {
+        "id": "df03f02293da5ad8",
+        "type": "ui-group",
+        "name": "Team Selection",
+        "page": "1324f03521afc73b",
+        "width": 12,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default",
+        "keepLoaded": false,
+        "tab": ""
+    },
+    {
+        "id": "grp_p3_results",
+        "type": "ui-group",
+        "name": "Match Results",
+        "page": "1324f03521afc73b",
+        "width": 6,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default",
+        "keepLoaded": false,
+        "tab": ""
+    },
+    {
+        "id": "grp_p3_goals",
+        "type": "ui-group",
+        "name": "Goals Comparison",
+        "page": "1324f03521afc73b",
+        "width": 6,
+        "height": 1,
+        "order": 3,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default",
+        "keepLoaded": false,
+        "tab": ""
+    },
+    {
+        "id": "grp_p3_history",
+        "type": "ui-group",
+        "name": "Match History",
+        "page": "1324f03521afc73b",
+        "width": 12,
+        "height": 1,
+        "order": 4,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default",
+        "keepLoaded": false,
+        "tab": ""
+    },
+    {
+        "id": "7d2d883102796b11",
+        "type": "ui-group",
+        "name": "Season Summary",
+        "page": "ui_page_id",
+        "width": "12",
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default",
+        "keepLoaded": false,
+        "tab": ""
+    },
+    {
+        "id": "ui_page_id",
+        "type": "ui-page",
+        "name": "Football Analytics",
+        "ui": "ui_base_id",
+        "path": "/page1",
+        "icon": "soccer",
+        "layout": "grid",
+        "theme": "ui_theme_id",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "tabs": [],
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "fb4669e2a05068cd",
+        "type": "ui-page",
+        "name": "Top Scorers",
+        "ui": "ui_base_id",
+        "path": "/page2",
+        "icon": "podium",
+        "layout": "grid",
+        "theme": "ui_theme_id",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "tabs": [],
+        "order": 2,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "1324f03521afc73b",
+        "type": "ui-page",
+        "name": "Team Analysis",
+        "ui": "ui_base_id",
+        "path": "/page3",
+        "icon": "chart-bar",
+        "layout": "grid",
+        "theme": "ui_theme_id",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "tabs": [],
+        "order": 3,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "ui_base_id",
+        "type": "ui-base",
+        "name": "LaLiga Dashboard",
+        "path": "/dashboard",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control",
+            "ui-event"
+        ]
+    },
+    {
+        "id": "ui_theme_id",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#1f2937",
+            "bgPage": "#f3f4f6",
+            "groupBg": "#ffffff",
+            "groupOutline": "#e5e7eb"
+        }
+    },
+    {
+        "id": "aa9edc09d16ff145",
         "type": "global-config",
         "env": [],
         "modules": {
