@@ -7,114 +7,6 @@
         "info": ""
     },
     {
-        "id": "kafka_in",
-        "type": "kafkajs-consumer",
-        "z": "1dea392bb9cc936c",
-        "name": "laliga-matches Consumer",
-        "client": "kafka_broker_config",
-        "groupid": "nodered-dashboard",
-        "topic": "laliga-matches",
-        "advancedoptions": false,
-        "autocommitinterval": "",
-        "autocommitthreshold": "",
-        "sessiontimeout": "",
-        "rebalancetimeout": "",
-        "heartbeatinterval": "",
-        "metadatamaxage": "",
-        "maxbytesperpartition": "",
-        "minbytes": "",
-        "maxbytes": "",
-        "maxwaittimeinms": "",
-        "frombeginning": false,
-        "clearoffsets": false,
-        "allowautotopiccreation": false,
-        "x": 210,
-        "y": 160,
-        "wires": [
-            [
-                "json_parser"
-            ]
-        ]
-    },
-    {
-        "id": "json_parser",
-        "type": "json",
-        "z": "1dea392bb9cc936c",
-        "name": "Parse JSON",
-        "property": "payload",
-        "action": "",
-        "pretty": false,
-        "x": 430,
-        "y": 160,
-        "wires": [
-            [
-                "debug_node",
-                "format_match_function"
-            ]
-        ]
-    },
-    {
-        "id": "debug_node",
-        "type": "debug",
-        "z": "1dea392bb9cc936c",
-        "name": "Console",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 660,
-        "y": 100,
-        "wires": []
-    },
-    {
-        "id": "format_match_function",
-        "type": "function",
-        "z": "1dea392bb9cc936c",
-        "name": "Format",
-        "func": "var count = context.get('matchCount') || 0;\ncount++;\ncontext.set('matchCount', count);\n\n// First parse: Kafka message\nvar kafkaMessage = typeof msg.payload === \"string\"\n    ? JSON.parse(msg.payload)\n    : msg.payload;\n\n// Second parse: actual football match\nvar match = typeof kafkaMessage.value === \"string\"\n    ? JSON.parse(kafkaMessage.value)\n    : kafkaMessage.value;\n\nvar home = match.homeTeam?.shortName || \"Home\";\nvar away = match.awayTeam?.shortName || \"Away\";\nvar matchday = match.matchday || \"?\";\n\nmsg.payload = \"[Match \" + count + \"] Matchday \" +\n    matchday + \" | \" + home + \" vs \" + away;\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 650,
-        "y": 200,
-        "wires": [
-            [
-                "ui_text_node"
-            ]
-        ]
-    },
-    {
-        "id": "ui_text_node",
-        "type": "ui-text",
-        "z": "1dea392bb9cc936c",
-        "group": "ui_group_id",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "name": "Latest Match Display",
-        "label": "",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": "",
-        "color": "#000000",
-        "wrapText": false,
-        "className": "",
-        "value": "payload",
-        "valueType": "msg",
-        "x": 880,
-        "y": 200,
-        "wires": []
-    },
-    {
         "id": "kafka_broker_config",
         "type": "kafkajs-client",
         "name": "Kafka Docker",
@@ -122,41 +14,18 @@
         "clientid": "nodered-ui",
         "connectiontimeout": "30000",
         "requesttimeout": "30000",
-        "advancedretry": false,
-        "maxretrytime": "",
-        "initialretrytime": "",
-        "factor": "",
-        "multiplier": "",
-        "retries": "",
+        "advancedretry": true,
+        "maxretrytime": "30000",
+        "initialretrytime": "300",
+        "factor": "0.2",
+        "multiplier": "1",
+        "retries": "5",
         "tlsselfsign": false,
         "tlscacert": "",
         "tlsclientcert": "",
         "tlsprivatekey": "",
         "tlspassphrase": "",
         "saslssl": false
-    },
-    {
-        "id": "ui_group_id",
-        "type": "ui-group",
-        "name": "Live Data Feed",
-        "page": "ui_page_id",
-        "width": "6",
-        "height": "1",
-        "order": 1,
-        "showTitle": true,
-        "className": ""
-    },
-    {
-        "id": "ui_page_id",
-        "type": "ui-page",
-        "name": "Football Analytics",
-        "ui": "ui_base_id",
-        "path": "/page1",
-        "icon": "home",
-        "layout": "grid",
-        "theme": "ui_theme_id",
-        "order": 1,
-        "className": ""
     },
     {
         "id": "ui_base_id",
@@ -183,7 +52,611 @@
         }
     },
     {
-        "id": "0901946fad9f0247",
+        "id": "fb4669e2a05068cd",
+        "type": "ui-page",
+        "name": "Top Scorers",
+        "ui": "ui_base_id",
+        "path": "/page2",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "ui_theme_id",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "tabs": [],
+        "order": 2,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "f740b134e1a2e2f7",
+        "type": "ui-group",
+        "name": "Scorers Ranking",
+        "page": "fb4669e2a05068cd",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default",
+        "keepLoaded": false,
+        "tab": ""
+    },
+    {
+        "id": "ui_page_id",
+        "type": "ui-page",
+        "name": "Football Analytics",
+        "ui": "ui_base_id",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "ui_theme_id",
+        "order": 1,
+        "className": ""
+    },
+    {
+        "id": "ui_group_id",
+        "type": "ui-group",
+        "name": "Live Data Feed",
+        "page": "ui_page_id",
+        "width": "6",
+        "height": "1",
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": true,
+        "disabled": false
+    },
+    {
+        "id": "1324f03521afc73b",
+        "type": "ui-page",
+        "name": "Team Analysis",
+        "ui": "ui_base_id",
+        "path": "/page3",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "ui_theme_id",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "tabs": [],
+        "order": 3,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "df03f02293da5ad8",
+        "type": "ui-group",
+        "name": "Team Statistics",
+        "page": "1324f03521afc73b",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default",
+        "keepLoaded": false,
+        "tab": ""
+    },
+    {
+        "id": "json_parser",
+        "type": "json",
+        "z": "1dea392bb9cc936c",
+        "name": "Parse JSON",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 430,
+        "y": 160,
+        "wires": [
+            [
+                "debug_node",
+                "f6a375e6f6f9497e"
+            ]
+        ]
+    },
+    {
+        "id": "debug_node",
+        "type": "debug",
+        "z": "1dea392bb9cc936c",
+        "name": "Console",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "kafka_in",
+        "type": "kafkajs-consumer",
+        "z": "1dea392bb9cc936c",
+        "name": "laliga-matches Consumer",
+        "client": "kafka_broker_config",
+        "groupid": "nodered-standings-recovery-5",
+        "topic": "laliga-team-stats",
+        "advancedoptions": true,
+        "autocommitinterval": "50000",
+        "autocommitthreshold": "0",
+        "sessiontimeout": "30000",
+        "rebalancetimeout": "60000",
+        "heartbeatinterval": "3000",
+        "metadatamaxage": "300000",
+        "maxbytesperpartition": "1048576",
+        "minbytes": "1",
+        "maxbytes": "10485760",
+        "maxwaittimeinms": "5000",
+        "frombeginning": true,
+        "clearoffsets": false,
+        "allowautotopiccreation": false,
+        "x": 210,
+        "y": 240,
+        "wires": [
+            [
+                "json_parser"
+            ]
+        ]
+    },
+    {
+        "id": "f6a375e6f6f9497e",
+        "type": "function",
+        "z": "1dea392bb9cc936c",
+        "name": "Build League Table",
+        "func": "\n// 1. Parse the Kafka message\nvar kafkaMessage = typeof msg.payload === \"string\"\n    ? JSON.parse(msg.payload)\n    : msg.payload;\n\n// 2. Extract team statistics\nvar stats = typeof kafkaMessage.value === \"string\"\n    ? JSON.parse(kafkaMessage.value)\n    : kafkaMessage.value;\n\n// 3. Retrieve stored teams\nvar teams = flow.get(\"teams\") || {};\n\n// 4. Update this team's statistics\nteams[stats.teamId] = stats;\n\n// 5. Save the updated state\nflow.set(\"teams\", teams);\n\n// 6. Build league table\nvar table = Object.values(teams);\n\n// 7. Sort by points, goal difference and goals scored\ntable.sort((a, b) =>\n    (b.points - a.points) ||\n    (b.gd - a.gd) ||\n    (b.gf - a.gf)\n);\n\n\n // 8. Build a compact league table\n msg.payload = table.map((team, index) => ({\n     Pos: index + 1,\n     Equipo: team.name,\n     PJ: team.played,\n     G: team.won,\n     E: team.draw,\n     P: team.lost,\n     DG: team.gd,\n     Pts: team.points\n }));\n\n return msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 180,
+        "wires": [
+            [
+                "1783641820f6b635",
+                "72a7515935e9b224"
+            ]
+        ]
+    },
+    {
+        "id": "1783641820f6b635",
+        "type": "ui-table",
+        "z": "1dea392bb9cc936c",
+        "group": "ui_group_id",
+        "name": "LaLiga Standings",
+        "label": "LaLiga Classification",
+        "order": 1,
+        "width": "12",
+        "height": "20",
+        "maxrows": "0",
+        "passthru": false,
+        "autocols": false,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [
+            {
+                "title": "Pos",
+                "key": "Pos",
+                "keyType": "key",
+                "type": "text",
+                "width": "45",
+                "align": "center"
+            },
+            {
+                "title": "Team",
+                "key": "Equipo",
+                "keyType": "key",
+                "type": "text",
+                "width": "130",
+                "align": "start"
+            },
+            {
+                "title": "MP",
+                "key": "PJ",
+                "keyType": "key",
+                "type": "text",
+                "width": "50",
+                "align": "center"
+            },
+            {
+                "title": "W",
+                "key": "G",
+                "keyType": "key",
+                "type": "text",
+                "width": "40",
+                "align": "center"
+            },
+            {
+                "title": "D",
+                "key": "E",
+                "keyType": "key",
+                "type": "text",
+                "width": "40",
+                "align": "center"
+            },
+            {
+                "title": "L",
+                "key": "P",
+                "keyType": "key",
+                "type": "text",
+                "width": "40",
+                "align": "center"
+            },
+            {
+                "title": "GD",
+                "key": "DG",
+                "keyType": "key",
+                "type": "text",
+                "width": "50",
+                "align": "center"
+            },
+            {
+                "title": "Pts",
+                "key": "Pts",
+                "keyType": "key",
+                "type": "text",
+                "width": "50",
+                "align": "center"
+            }
+        ],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 970,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6561e27c0d8bf05c",
+        "type": "kafkajs-consumer",
+        "z": "1dea392bb9cc936c",
+        "name": "LaLiga Scorers Consumer",
+        "client": "kafka_broker_config",
+        "groupid": "nodered-scorers",
+        "topic": "laliga-scorers",
+        "advancedoptions": true,
+        "autocommitinterval": "50000",
+        "autocommitthreshold": "0",
+        "sessiontimeout": "30000",
+        "rebalancetimeout": "60000",
+        "heartbeatinterval": "3000",
+        "metadatamaxage": "300000",
+        "maxbytesperpartition": "1048576",
+        "minbytes": "1",
+        "maxbytes": "10485760",
+        "maxwaittimeinms": "5000",
+        "frombeginning": true,
+        "clearoffsets": false,
+        "allowautotopiccreation": false,
+        "x": 210,
+        "y": 380,
+        "wires": [
+            [
+                "70f21afe29ebfd34"
+            ]
+        ]
+    },
+    {
+        "id": "70f21afe29ebfd34",
+        "type": "json",
+        "z": "1dea392bb9cc936c",
+        "name": "Parse Scorers JSON",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 500,
+        "y": 380,
+        "wires": [
+            [
+                "891084cb0bd554f0"
+            ]
+        ]
+    },
+    {
+        "id": "891084cb0bd554f0",
+        "type": "function",
+        "z": "1dea392bb9cc936c",
+        "name": "Build Top Scorers",
+        "func": "\n// 1. Parse Kafka message\nvar kafkaMessage = typeof msg.payload === \"string\"\n    ? JSON.parse(msg.payload)\n    : msg.payload;\n\n// 2. Extract scorer data\nvar scorer = typeof kafkaMessage.value === \"string\"\n    ? JSON.parse(kafkaMessage.value)\n    : kafkaMessage.value;\n\n// 3. Retrieve stored players\nvar players = context.get(\"players\") || {};\n\n// 4. Update player statistics\nvar playerId = scorer.player?.id;\n\nif (playerId == null) {\n    return null;\n}\n\nplayers[playerId] = scorer;\ncontext.set(\"players\", players);\n\n// 5. Sort players by goals, then assists\nvar ranking = Object.values(players);\n\nranking.sort((a, b) =>\n    (b.goals - a.goals) ||\n    ((b.assists || 0) - (a.assists || 0))\n);\n\n// 6. Build top scorers table\nmsg.payload = ranking.map((item, index) => ({\n    Pos: index + 1,\n    Player: item.player?.name || \"Unknown\",\n    Team: item.team?.shortName || item.team?.name || \"-\",\n    Goals: item.goals ?? 0,\n    Assists: item.assists ?? 0,\n    Penalties: item.penalties ?? 0\n}));\n\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 830,
+        "y": 380,
+        "wires": [
+            [
+                "a020e4debf0fd426"
+            ]
+        ]
+    },
+    {
+        "id": "a020e4debf0fd426",
+        "type": "ui-table",
+        "z": "1dea392bb9cc936c",
+        "group": "f740b134e1a2e2f7",
+        "name": "LaLiga Top Scorers",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": true,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 1110,
+        "y": 380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ebe7b2e108f5d0b1",
+        "type": "ui-dropdown",
+        "z": "1dea392bb9cc936c",
+        "group": "df03f02293da5ad8",
+        "name": "Team Selector",
+        "label": "Select Team",
+        "tooltip": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "multiple": false,
+        "chips": false,
+        "clearable": false,
+        "options": [
+            {
+                "label": "",
+                "value": "",
+                "type": "str"
+            }
+        ],
+        "payload": "",
+        "topic": "topic",
+        "topicType": "msg",
+        "className": "",
+        "typeIsComboBox": true,
+        "msgTrigger": "onChange",
+        "x": 920,
+        "y": 600,
+        "wires": [
+            [
+                "b3ef1b59533da56c"
+            ]
+        ]
+    },
+    {
+        "id": "72a7515935e9b224",
+        "type": "function",
+        "z": "1dea392bb9cc936c",
+        "name": "Build Team Options",
+        "func": "\nvar teams = msg.payload;\n\n// Sort teams alphabetically\nteams.sort((a, b) => a.Equipo.localeCompare(b.Equipo));\n\n// Create dropdown options\nmsg.ui_update = {\n    options: teams.map(team => ({\n        label: team.Equipo,\n        value: team.Equipo\n    }))\n};\n\n// Avoid selecting a team automatically\ndelete msg.payload;\n\nreturn msg;\n\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 480,
+        "wires": [
+            [
+                "ebe7b2e108f5d0b1"
+            ]
+        ]
+    },
+    {
+        "id": "b3ef1b59533da56c",
+        "type": "function",
+        "z": "1dea392bb9cc936c",
+        "name": "Show Team Stats",
+        "func": "\nconst selectedTeam = msg.payload;\n\n// Retrieve shared team statistics\nconst teams = flow.get(\"teams\") || {};\n\n// Find selected team\nconst stats = Object.values(teams).find(\n    team => team.name === selectedTeam\n);\n\nif (!stats) {\n    node.warn(\"Team not found: \" + selectedTeam);\n    return null;\n}\n\n// Output 1: Match Results\nconst resultsMsg = {\n    payload: [\n        { category: \"Wins\", value: stats.won },\n        { category: \"Draws\", value: stats.draw },\n        { category: \"Losses\", value: stats.lost }\n    ]\n};\n\n// Output 2: Goals Comparison\nconst goalsMsg = {\n    payload: [\n        { category: \"Goals For\", value: stats.gf },\n        { category: \"Goals Against\", value: stats.ga }\n    ]\n};\n\nreturn [resultsMsg, goalsMsg];\n\n\n\n\n\n\n\n\n",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1150,
+        "y": 600,
+        "wires": [
+            [
+                "c586cedf67b2dabf"
+            ],
+            [
+                "2759dba1517c417f"
+            ]
+        ]
+    },
+    {
+        "id": "c586cedf67b2dabf",
+        "type": "ui-chart",
+        "z": "1dea392bb9cc936c",
+        "group": "df03f02293da5ad8",
+        "name": "Match Results",
+        "label": "chart",
+        "order": 2,
+        "chartType": "bar",
+        "category": "Results",
+        "categoryType": "str",
+        "xAxisLabel": "Match Result",
+        "xAxisProperty": "category",
+        "xAxisPropertyType": "property",
+        "xAxisType": "category",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "Matches",
+        "yAxisProperty": "value",
+        "yAxisPropertyType": "property",
+        "ymin": "0",
+        "ymax": "",
+        "bins": 10,
+        "action": "replace",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": false,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 1440,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2759dba1517c417f",
+        "type": "ui-chart",
+        "z": "1dea392bb9cc936c",
+        "group": "df03f02293da5ad8",
+        "name": "Goals Comparison",
+        "label": "chart",
+        "order": 3,
+        "chartType": "bar",
+        "category": "Goals",
+        "categoryType": "str",
+        "xAxisLabel": "Goal Type",
+        "xAxisProperty": "category",
+        "xAxisPropertyType": "property",
+        "xAxisType": "category",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "Number of Goals",
+        "yAxisProperty": "value",
+        "yAxisPropertyType": "property",
+        "ymin": "0",
+        "ymax": "",
+        "bins": 10,
+        "action": "replace",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 1450,
+        "y": 680,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9f29b34eb4d14c27",
         "type": "global-config",
         "env": [],
         "modules": {
