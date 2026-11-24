@@ -34,7 +34,15 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
-
+  kafka-init:
+    image: apache/kafka:4.4.0
+    volumes:
+      - ./kafka-config:/kafka-config:ro
+    entrypoint: ["/bin/sh", "/kafka-config/init-topics.sh"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: "no"
   producer:
     build:
       context: .
@@ -46,8 +54,8 @@ services:
     environment:
       KAFKA_BROKER: kafka:9092
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   consumer:
@@ -60,8 +68,8 @@ services:
     environment:
       KAFKA_BROKER: kafka:9092
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   nodered:
@@ -72,8 +80,8 @@ services:
     volumes:
       - ./node-red-data:/data
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
 
 volumes:
   kafka-data:
